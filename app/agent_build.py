@@ -4,10 +4,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from tools.retrieval import retrieve_docs
 from tools.calculator import calculator
 
-model = ChatGoogleGenerativeAI(
-    model="models/gemini-2.5-flash",
-    temperature=0
-)
+
 
 def build_agent():
     

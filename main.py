@@ -1,10 +1,25 @@
 # === 載入套件 ===
-from agent.agent_build import build_agent
-
+from app.agent_build import build_agent
+from dotenv import load_dotenv
+load_dotenv()
 
 THREAD_ID = "demo-user-001"
 
+def stream_response(agent, user_input):
+    stream = agent.stream(
+        {"messages": [{"role": "user", "content": user_input}]},
+        config={"configurable": {"thread_id": THREAD_ID}}
+    )
 
+    prev = ""
+
+    for chunk in stream:
+        if "messages" in chunk:
+            msg = chunk["messages"][-1]
+            if msg.content:
+                new = msg.content[len(prev):]
+                print(new, end="", flush=True)
+                prev = msg.content
 
 
 # === CLI 對話介面 ===
