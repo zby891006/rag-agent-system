@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+
+# env
+.env
+
+# vectorstore（如果很大）
+*.faiss
+*.pkl
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# ipynb
+*.ipynb
