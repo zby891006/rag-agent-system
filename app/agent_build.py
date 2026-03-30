@@ -1,7 +1,8 @@
 from langchain.agents import create_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from tools.retrieval import retrieve_docs
+from tools.retrieve_hyde import retrieve_hyde
+from tools.retrieve_simple import retrieve_simple
 from tools.calculator import calculator_tool
 
 
@@ -16,7 +17,7 @@ def build_agent():
 
     return create_agent(
         model=model,
-        tools=[retrieve_docs, calculator_tool],
+        tools=[retrieve_simple, calculator_tool],
         system_prompt = (
             "You are an internal business AI assistant for ESG and finance documents.\n\n"
 
