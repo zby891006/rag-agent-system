@@ -6,6 +6,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
+import uuid
 
 load_dotenv()
 
@@ -29,6 +30,7 @@ def load_docs():
                     metadata={
                         "source": pdf_file.name,
                         "page": page.metadata.get("page", None),
+                        "uid": str(uuid.uuid4())  # 🔥 每頁唯一 ID
                     }
                 )
             )
@@ -50,6 +52,12 @@ def main():
     )
 
     split_docs = splitter.split_documents(docs)
+
+# 🔥 為每個 chunk 建立 UID（關鍵）
+    for doc in split_docs:
+        doc.metadata["chunk_uid"] = str(uuid.uuid4())
+
+
 
     embeddings = GoogleGenerativeAIEmbeddings(
         model="models/gemini-embedding-001"
