@@ -45,7 +45,7 @@ def main():
         print("❌ No documents found in data/")
         return
 
-    # 👉 ESG 報告適合較大 chunk（避免語意破碎）
+    
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=800,
         chunk_overlap=150
@@ -63,7 +63,7 @@ def main():
         model="models/gemini-embedding-001"
     )
 
-    print(f"📄 Loaded {len(docs)} pages → {len(split_docs)} chunks")
+    print(f" Loaded {len(docs)} pages → {len(split_docs)} chunks")
 
     db = Chroma.from_documents(
         split_docs,

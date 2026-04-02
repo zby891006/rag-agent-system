@@ -15,7 +15,7 @@ def run_retrieval_pipeline(query: str):
 
         print(f"\n=== [STEP {step}] ===")
 
-        # 🔵 選 retrieval
+        #  選 retrieval
         if use_hyde:
             hyde_queries, docs = retrieve_hyde_structured(current_query)
         else:
@@ -39,5 +39,5 @@ def run_retrieval_pipeline(query: str):
         if rqc_result["keywords"]:
             current_query = " ".join(rqc_result["keywords"])
 
-    # fallback（非常重要）
+    # fallback
     return docs

@@ -73,7 +73,7 @@ def retrieve_docs(
     query: str,
     k: int = 3,
     debug: bool = False,
-    retrieval_type: str = "simple"   # 🔥 新增這行
+    retrieval_type: str = "simple" 
         ):
     
     raw_docs = retrieve_docs_raw(query, k=k, debug=debug)

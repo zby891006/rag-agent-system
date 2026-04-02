@@ -1,7 +1,5 @@
 from langchain_core.callbacks import BaseCallbackHandler
 
-from langchain_core.callbacks import BaseCallbackHandler
-
 class DebugHandler(BaseCallbackHandler):
 
     def on_tool_start(self, serialized, input_str, **kwargs):

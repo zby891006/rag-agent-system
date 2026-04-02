@@ -1,76 +1,3 @@
-# from langchain_google_genai import ChatGoogleGenerativeAI
-# import json
-# from dotenv import load_dotenv
-
-# load_dotenv()
-
-# llm = ChatGoogleGenerativeAI(
-#     model="gemini-2.5-flash",
-#     temperature=0
-# )
-
-# def build_rqc_prompt(query: str, docs: list[dict]) -> str:
-
-#         context = "\n\n".join(
-#             f"[Doc {i+1}]\n{doc['text'][:300]}"
-#             for i, doc in enumerate(docs)
-#         )
-
-#         return f"""
-#     You are a retrieval quality evaluator.
-
-#     User Question:
-#     {query}
-
-#     Retrieved Documents:
-#     {context}
-
-#     Evaluate:
-
-#     1. Are the documents sufficient to answer the question?
-#     2. Are they too general or lacking specific details?
-#     3. Is key information missing?
-
-#     Return JSON:
-
-#     {{
-#     "decision": "PASS or RETRY",
-#     "confidence": 0-1,
-#     "reason": "...",
-#     "keywords": ["..."],
-#     "suggest_hyde": true/false
-#     }}
-#     """
-
-# def evaluate_rqc(query: str, docs: list, hyde_queries=None):
-
-#     if not docs:
-#         return {
-#             "decision": "RETRY",
-#             "confidence": 0.0,
-#             "reason": "No documents retrieved",
-#             "keywords": [],
-#             "suggest_hyde": True
-#         }
-
-#     prompt = build_rqc_prompt(query, docs)
-
-#     response = llm.invoke(prompt).content
-
-#     try:
-#         result = json.loads(response)
-#     except:
-#         # fallback
-#         result = {
-#             "decision": "RETRY",
-#             "confidence": 0.3,
-#             "reason": "LLM output parsing failed",
-#             "keywords": [],
-#             "suggest_hyde": True
-#         }
-
-#     return result
-
 from langchain_google_genai import ChatGoogleGenerativeAI
 import json
 import re
@@ -83,9 +10,9 @@ llm = ChatGoogleGenerativeAI(
     temperature=0
 )
 
-# =========================================
-# 🔥 JSON 安全解析（關鍵）
-# =========================================
+
+# JSON 解析
+
 def safe_json_parse(text: str):
 
     try:
@@ -99,9 +26,7 @@ def safe_json_parse(text: str):
     return None
 
 
-# =========================================
-# 🔥 Prompt（升級版：能抓「空話」）
-# =========================================
+# RQC Prompt 建立
 def build_rqc_prompt(query: str, docs: list[dict]) -> str:
 
     context = "\n\n".join(
@@ -179,7 +104,7 @@ def evaluate_rqc(query: str, docs: list, hyde_queries=None):
         }
 
    
-    #  防呆（關鍵）
+    
 
     result.setdefault("decision", "RETRY")
     result.setdefault("confidence", 0.5)

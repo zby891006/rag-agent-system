@@ -44,21 +44,3 @@ def classify_query(query: str) -> dict:
     }
     
     
-# def classify_query(query: str) -> str:
-
-#     prompt = f"""..."""
-
-#     result = llm.invoke(prompt).content.strip().lower()
-
-#     if "retrieval" in result:
-#         route = "retrieval"
-#     elif "memory" in result:
-#         route = "memory"
-#     else:
-#         route = "general"
-
-#     print("\n[ROUTER]")
-#     print("Query:", query)
-#     print("Decision:", route)
-
-#     return route
