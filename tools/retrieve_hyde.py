@@ -1,30 +1,24 @@
-# === tools/retrieve_hyde.py ===
 from langchain.tools import tool
 from typing import List
-from langchain_core.documents import Document
-from tools.retrieve_core import retrieve_docs_raw
+from tools.retrieve_core import retrieve_docs
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 from sentence_transformers import CrossEncoder
 
-model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
-
 load_dotenv()
 
+# === reranker ===
+reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 
-# === LLM 初始化 ===
+# === LLM ===
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7)
 
 
-# =========================================================
-# 🔹 1. HyDE Query Generation
-# =========================================================
+
+# HyDE Query Generation
 
 
 def generate_hyde_queries(question: str, n: int = 5) -> List[str]:
-    """
-    Generate multiple hypothetical queries for retrieval
-    """
 
     prompt = f"""
     You are an expert in ESG and financial reports.
@@ -33,12 +27,10 @@ def generate_hyde_queries(question: str, n: int = 5) -> List[str]:
 
     Requirements:
     - Each output should be a short paragraph (3–5 sentences)
-    - Write in formal disclosure/report style
-    - Describe processes for identifying, assessing, and managing climate-related risks
-    - Include specific frameworks (e.g., enterprise risk management, materiality assessment, ISO 14001)
-    - Use terminology commonly found in ESG reports
-    - Avoid questions; write as if it is part of the report
-    - Output as a Python list of strings
+    - Formal disclosure style
+    - Include frameworks (ERM, materiality, ISO 14001)
+    - No questions
+    - Output as Python list
     {question}
     """
 
@@ -49,33 +41,25 @@ def generate_hyde_queries(question: str, n: int = 5) -> List[str]:
         if not isinstance(queries, list):
             raise ValueError
     except:
-        # fallback（避免模型亂輸出）
         queries = [question]
 
-    # 保底：加入原始 query
     queries.append(question)
-
-    # 去重
     queries = list(set(q.strip() for q in queries if q.strip()))
 
     return queries
 
 
-# =========================================================
-# 🔹 2. Deduplicate
-# =========================================================
+
+# Deduplicate（改為 dict）
 
 
-def deduplicate_docs(docs: List[Document]) -> List[Document]:
-    """
-    Deduplicate documents based on content
-    """
+def deduplicate_docs(docs):
 
     seen = set()
     unique_docs = []
 
     for doc in docs:
-        key = doc.metadata["chunk_uid"]
+        key = doc["metadata"].get("chunk_uid", doc["text"][:50])
 
         if key not in seen:
             seen.add(key)
@@ -84,25 +68,29 @@ def deduplicate_docs(docs: List[Document]) -> List[Document]:
     return unique_docs
 
 
-# =========================================================
-# 🔹 3.Re-rank
-# =========================================================
+
+# Re-rank（改為 dict）
+
+
 def rerank_documents(query, docs, top_k=5):
-    pairs = [[query, doc.page_content] for doc in docs]
 
-    scores = model.predict(pairs)
+    pairs = [[query, doc["text"]] for doc in docs]
 
-    scored_docs = list(zip(docs, scores))
-    scored_docs.sort(key=lambda x: x[1], reverse=True)
+    scores = reranker.predict(pairs)
 
-    return [doc for doc, _ in scored_docs[:top_k]]
+    for doc, score in zip(docs, scores):
+        doc["score"] = float(score)
+
+    docs.sort(key=lambda x: x["score"], reverse=True)
+
+    return docs[:top_k]
 
 
-@tool
-def retrieve_hyde(question: str) -> str:
-    """
-    Advanced retrieval using HyDE (multi-query expansion).
-    """
+
+# System-level HyDE（核心）
+
+
+def retrieve_hyde_structured(question: str, k: int = 5):
 
     print("\n=== [HyDE START] ===")
 
@@ -113,14 +101,19 @@ def retrieve_hyde(question: str) -> str:
     for i, q in enumerate(queries, 1):
         print(f"{i}. {q}")
 
-    # 2️⃣ multi-query retrieval
+    # retrieval（用retrieve_docs）
     all_docs = []
 
     for q in queries:
-        docs = retrieve_docs_raw(q, k=5, debug=False)
+        docs = retrieve_docs(
+            q,
+            k=k,
+            retrieval_type="hyde"   # 🔥 關鍵
+        )
+
         all_docs.extend(docs)
 
-    print(f"\n[HyDE] Total retrieved before dedup: {len(all_docs)}")
+    print(f"\n[HyDE] Total retrieved: {len(all_docs)}")
 
     # 3️⃣ deduplicate
     unique_docs = deduplicate_docs(all_docs)
@@ -128,19 +121,36 @@ def retrieve_hyde(question: str) -> str:
     print(f"[HyDE] After dedup: {len(unique_docs)}")
 
     if not unique_docs:
+        return queries, []
+
+    # 4️⃣ rerank
+    reranked_docs = rerank_documents(question, unique_docs, top_k=k)
+
+    return queries, reranked_docs
+
+
+
+# Tool 保留工具接口 
+
+
+@tool
+def retrieve_hyde(question: str) -> str:
+    """
+    HyDE retrieval tool (formatted for LLM)
+    """
+
+    queries, docs = retrieve_hyde_structured(question)
+
+    if not docs:
         return "No relevant documents found."
 
-    # rerank（最重要）
-
-    rerank_query = question
-
-    reranked_docs = rerank_documents(rerank_query, unique_docs, top_k=5)
-  
     formatted = []
-    for i, doc in enumerate(reranked_docs, start=1):
+
+    for i, doc in enumerate(docs, start=1):
         formatted.append(
-            f"[Document {i}] source={doc.metadata.get('source', 'unknown')}\n"
-            f"{doc.page_content}"
+            f"[Document {i}] "
+            f"source={doc['metadata'].get('source', 'unknown')}\n"
+            f"{doc['text']}"
         )
 
     return "\n\n".join(formatted)

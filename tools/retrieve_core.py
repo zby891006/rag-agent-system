@@ -67,3 +67,26 @@ def retrieve_docs_raw(
             print(f"[Doc {i}] {preview}...")
 
     return results
+
+
+def retrieve_docs(
+    query: str,
+    k: int = 3,
+    debug: bool = False,
+    retrieval_type: str = "simple"   # 🔥 新增這行
+        ):
+    
+    raw_docs = retrieve_docs_raw(query, k=k, debug=debug)
+
+    results = []
+
+    for doc in raw_docs:
+        results.append({
+            "text": doc.page_content,
+            "metadata": doc.metadata,
+            "score": None,
+            "source_query": query,
+            "retrieval_type": retrieval_type
+        })
+
+    return results
