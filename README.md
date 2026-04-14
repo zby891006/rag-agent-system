@@ -6,7 +6,7 @@
 本專案實作一個應用於 ESG / 財務文件的問答 AI Agent，  
 透過 Retrieval-Augmented Generation（RAG）架構，結合查詢路由（Routing）、檢索品質控制（RQC）做為門控機制與 HyDE 強化檢索策略。  
 
-
+過程中使用ChatGPT協助程式撰寫
 
 ---
 ## 設計思維（Design Rationale）

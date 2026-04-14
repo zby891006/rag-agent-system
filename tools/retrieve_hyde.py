@@ -23,14 +23,22 @@ def generate_hyde_queries(question: str, n: int = 5) -> List[str]:
     prompt = f"""
     You are an expert in ESG and financial reports.
 
-    Generate {n} hypothetical paragraphs that could appear in an ESG or sustainability report.
+    Generate {n} hypothetical paragraphs that could appear in the ESG, sustainability, or annual report of the specific company mentioned in the user question.
 
     Requirements:
     - Each output should be a short paragraph (3–5 sentences)
     - Formal disclosure style
-    - Include frameworks (ERM, materiality, ISO 14001)
+    - The company name mentioned in the question must be explicitly preserved and repeated naturally in every paragraph
+    - Always include the company name from the question in every generated query
+    - Do not replace the company name with generic terms such as "the company", "the group", "the issuer", or "the organization" unless the full company name also appears in the same paragraph
+    - Focus only on ESG, sustainability, governance, risk management, climate, environmental, health and safety, supply chain, compliance, or materiality topics relevant to that company
+    - Include frameworks and report terminology where appropriate, such as ERM, materiality assessment, ISO 14001, climate-related risk management, stakeholder engagement, and governance oversight
+    - Keep the content plausible for that specific company, and do not drift into generic industry-wide language that is not tied to the named company
     - No questions
-    - Output as Python list
+    - Output as a Python list of strings only
+    
+
+    User question:
     {question}
     """
 
